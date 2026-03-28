@@ -1,0 +1,107 @@
+{
+  "name": "Olympics_Data_Transformation_Pipeline",
+  "properties": {
+    "description": "Pipeline to transform Olympics data using Azure Databricks",
+    "activities": [
+      {
+        "name": "Transform_Athletes",
+        "type": "DatabricksNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "notebookPath": "/Workspace/Olympics/transform_athletes",
+          "baseParameters": {
+            "storage_account": "olympicsdatalake123",
+            "input_container": "raw",
+            "output_container": "processed"
+          }
+        },
+        "linkedServiceName": {
+          "referenceName": "LS_Databricks",
+          "type": "LinkedServiceReference"
+        }
+      },
+      {
+        "name": "Transform_Medals",
+        "type": "DatabricksNotebook",
+        "dependsOn": [
+          {
+            "activity": "Transform_Athletes",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+          "notebookPath": "/Workspace/Olympics/transform_medals",
+          "baseParameters": {
+            "storage_account": "olympicsdatalake123",
+            "input_container": "raw",
+            "output_container": "processed"
+          }
+        },
+        "linkedServiceName": {
+          "referenceName": "LS_Databricks",
+          "type": "LinkedServiceReference"
+        }
+      },
+      {
+        "name": "Transform_EntriesGender",
+        "type": "DatabricksNotebook",
+        "dependsOn": [
+          {
+            "activity": "Transform_Medals",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "notebookPath": "/Workspace/Olympics/transform_entriesgender",
+          "baseParameters": {
+            "storage_account": "olympicsdatalake123",
+            "input_container": "raw",
+            "output_container": "processed"
+          }
+        },
+        "linkedServiceName": {
+          "referenceName": "LS_Databricks",
+          "type": "LinkedServiceReference"
+        }
+      },
+      {
+        "name": "Notify_Success",
+        "type": "WebActivity",
+        "dependsOn": [
+          {
+            "activity": "Transform_EntriesGender",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0
+        },
+        "typeProperties": {
+          "url": "https://prod-00.centralus.logic.azure.com:443/workflows/PLACEHOLDER",
+          "method": "POST",
+          "body": {
+            "message": "Olympics data transformation completed successfully",
+            "timestamp": "@utcnow()",
+            "pipelineName": "@pipeline().Pipeline"
+          }
+        }
+      }
+    ],
+    "annotations": []
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,31 @@
+# Python Dependencies for Olympics Data Engineering Project
+
+# Azure SDK
+azure-storage-blob==12.19.0
+azure-identity==1.15.0
+azure-mgmt-datafactory==6.0.0
+azure-mgmt-storage==21.1.0
+azure-mgmt-synapse==2.1.0
+
+# Data Processing
+pyspark==3.5.0
+pandas==2.1.4
+numpy==1.26.2
+
+# Database Connectivity
+pyodbc==5.0.1
+sqlalchemy==2.0.23
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Development & Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.12.1
+flake8==6.1.0
+
+# Logging & Monitoring
+azure-monitor-query==1.2.0
+opencensus-ext-azure==1.1.13

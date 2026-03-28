@@ -1,0 +1,120 @@
+{
+  "name": "Olympics_Master_Pipeline",
+  "properties": {
+    "description": "Master orchestration pipeline for end-to-end Olympics data processing",
+    "activities": [
+      {
+        "name": "Execute_Ingestion",
+        "type": "ExecutePipeline",
+        "dependsOn": [],
+        "userProperties": [],
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "Olympics_Data_Ingestion_Pipeline",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true
+        }
+      },
+      {
+        "name": "Execute_Transformation",
+        "type": "ExecutePipeline",
+        "dependsOn": [
+          {
+            "activity": "Execute_Ingestion",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "Olympics_Data_Transformation_Pipeline",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true
+        }
+      },
+      {
+        "name": "Load_to_Synapse",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "Execute_Transformation",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30
+        },
+        "typeProperties": {
+          "source": {
+            "type": "ParquetSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "wildcardFolderPath": "olympics",
+              "wildcardFileName": "*.parquet",
+              "enablePartitionDiscovery": false
+            }
+          },
+          "sink": {
+            "type": "SqlDWSink",
+            "preCopyScript": "TRUNCATE TABLE dbo.Athletes",
+            "writeBatchSize": 10000,
+            "disableMetricsCollection": false
+          },
+          "enableStaging": true,
+          "stagingSettings": {
+            "linkedServiceName": {
+              "referenceName": "LS_ADLS_Staging",
+              "type": "LinkedServiceReference"
+            },
+            "path": "staging"
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "DS_ADLS_Processed",
+            "type": "DatasetReference"
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "DS_Synapse_Athletes",
+            "type": "DatasetReference"
+          }
+        ]
+      },
+      {
+        "name": "Send_Completion_Email",
+        "type": "WebActivity",
+        "dependsOn": [
+          {
+            "activity": "Load_to_Synapse",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "url": "https://prod-00.centralus.logic.azure.com:443/workflows/PLACEHOLDER",
+          "method": "POST",
+          "body": {
+            "subject": "Olympics Pipeline Completed Successfully",
+            "message": "All data has been ingested, transformed, and loaded to Synapse Analytics",
+            "timestamp": "@utcnow()",
+            "runId": "@pipeline().RunId"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "ExecutionDate": {
+        "type": "string",
+        "defaultValue": "@utcnow()"
+      }
+    },
+    "annotations": []
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}

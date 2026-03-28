@@ -1,0 +1,51 @@
+{
+  "azure": {
+    "subscription_id": "YOUR_SUBSCRIPTION_ID",
+    "resource_group": "olympics-rg",
+    "location": "centralindia"
+  },
+  "storage": {
+    "account_name": "olympicsdatalake123",
+    "containers": {
+      "raw": "raw",
+      "processed": "processed",
+      "curated": "curated",
+      "staging": "staging"
+    },
+    "folders": {
+      "olympics_raw": "olympics/",
+      "olympics_processed": "olympics/",
+      "olympics_curated": "olympics/"
+    }
+  },
+  "data_factory": {
+    "name": "olympics-adf",
+    "pipelines": {
+      "ingestion": "Olympics_Data_Ingestion_Pipeline",
+      "transformation": "Olympics_Data_Transformation_Pipeline",
+      "master": "Olympics_Master_Pipeline"
+    }
+  },
+  "databricks": {
+    "workspace_name": "olympics-databricks",
+    "cluster_name": "olympics-cluster",
+    "runtime_version": "13.3.x-scala2.12",
+    "node_type": "Standard_DS3_v2",
+    "notebooks_path": "/Workspace/Olympics/"
+  },
+  "synapse": {
+    "workspace_name": "olympics-synapse",
+    "sql_pool": "olympicspool",
+    "database": "olympicsdb"
+  },
+  "data_sources": {
+    "github_base_url": "https://raw.githubusercontent.com/YOUR_REPO/main/data/",
+    "files": [
+      "Athletes.csv",
+      "Coaches.csv",
+      "Medals.csv",
+      "Teams.csv",
+      "EntriesGender.csv"
+    ]
+  }
+}
